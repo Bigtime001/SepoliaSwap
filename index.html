@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Wallet and Send Transaction</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Connect Wallet and Send Transaction</h1>
+    <button id="connectButton">Connect Wallet</button>
+
+    <div id="contractSelection" style="display:none;">
+        <h2>Select Contract</h2>
+        <select id="contractSelect" onchange="updateFunctionOptions()">
+            <option value="0x5B4D751C5520417A69A45116dE290972Ef0F2aaA">AMM Contract</option>
+            <option value="0xa0fea47c50d937311a6594f4f2bae413300c1913">Twitter Contract</option>
+            <option value="0x156cbcb31e8234a2a159909049aeb5f4156ddd61">Trading Contract</option>
+            <option value="0x49c30BE60EcCB71a905c3E02fb63F34ceBfda924">Voting Contract</option>
+            <option value="0xaAb3936e1505F06a8700a8f7B1218D2015B682C8">Counter Contract</option>
+        </select>
+
+        <h2>Select Function</h2>
+        <select id="functionSelect">
+            <!-- Functions will be populated here based on the selected contract -->
+        </select>
+
+        <h2>Function Parameters</h2>
+        <div id="parameterInputs">
+            <!-- Parameter inputs will be dynamically added here -->
+        </div>
+
+        <button id="sendTransactionButton">Send Transaction</button>
+    </div>
+
+    <script>
+        const alchemyUrl = "https://shape-sepolia.g.alchemy.com/v2/tNVm7AEbbeB64EyJmh3Uz2CMYOPtpcKs";
+        let web3;
+
+        const CONTRACT_ABIS = {
+            "0x5B4D751C5520417A69A45116dE290972Ef0F2aaA": [{"inputs":[{"internalType":"address","name":"_tokenA","type":"address"},{"internalType":"address","name":"_tokenB","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"liquidityProvider","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountTokenA","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amountTokenB","type":"uint256"}],"name":"LiquidityAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"liquidityProvider","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountTokenA","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amountTokenB","type":"uint256"}],"name":"LiquidityRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"trader","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountTokenA","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amountTokenB","type":"uint256"}],"name":"SwappedAforB","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"trader","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountTokenB","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amountTokenA","type":"uint256"}],"name":"SwappedBforA","type":"event"},{"inputs":[{"internalType":"uint256","name":"amountA","type":"uint256"},{"internalType":"uint256","name":"amountB","type":"uint256"}],"name":"addLiquidity","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_token","type":"address"}],"name":"getPrice","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}],
+            
+            "0xa0fea47c50d937311a6594f4f2bae413300c1913": [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"id","type":"uint256"},{"indexed":false,"internalType":"address","name":"author","type":"address"},{"indexed":false,"internalType":"string","name":"content","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"TweetCreated","type":"event"},{"inputs":[{"internalType":"string","name":"_tweet","type":"string"}],"name":"createTweet","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_owner","type":"address"}],"name":"getAllTweets","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likes","type":"uint256"}],"internalType":"struct Twitter.Tweet[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            
+            "0x156cbcb31e8234a2a159909049aeb5f4156ddd61": [{"inputs":[],"name":"getBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCollectedFees","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"}],
+            
+            "0x49c30BE60EcCB71a905c3E02fb63F34ceBfda924": [{"inputs":[{"internalType":"uint256","name":"candidateId","type":"uint256"},{"internalType":"string","name":"name","type":"string"}],"name":"addCandidate","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"registerUser","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"candidateId","type":"uint256"}],"name":"vote","outputs":[],"stateMutability":"nonpayable","type":"function"}],
+            
+            "0xaAb3936e1505F06a8700a8f7B1218D2015B682C8": [{"inputs":[],"name":"getCurrent","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"increment","outputs":[],"stateMutability":"nonpayable","type":"function"}]
+        };
+
+        document.getElementById('connectButton').onclick = async () => {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+                document.getElementById('contractSelection').style.display = 'block';
+                updateFunctionOptions();
+            } else {
+                alert('Please install MetaMask!');
+            }
+        };
+
+        function updateFunctionOptions() {
+            const contractAddress = document.getElementById('contractSelect').value;
+            const functionSelect = document.getElementById('functionSelect');
+            const parameterInputs = document.getElementById('parameterInputs');
+            
+            functionSelect.innerHTML = '';
+            parameterInputs.innerHTML = '';
+
+            const abi = CONTRACT_ABIS[contractAddress];
+            const functions = abi.filter(item => item.type === 'function');
+
+            functions.forEach(func => {
+                const option = document.createElement('option');
+                option.value = func.name;
+                option.textContent = `${func.name} (${func.stateMutability})`;
+                functionSelect.appendChild(option);
+            });
+
+            functionSelect.onchange = updateParameterInputs;
+            updateParameterInputs();
+        }
+
+        function updateParameterInputs() {
+            const contractAddress = document.getElementById('contractSelect').value;
+            const selectedFunction = document.getElementById('functionSelect').value;
+            const parameterInputs = document.getElementById('parameterInputs');
+            
+            parameterInputs.innerHTML = '';
+            
+            const abi = CONTRACT_ABIS[contractAddress];
+            const functionAbi = abi.find(item => item.type === 'function' && item.name === selectedFunction);
+            
+            if (functionAbi && functionAbi.inputs) {
+                functionAbi.inputs.forEach((input, index) => {
+                    const inputDiv = document.createElement('div');
+                    inputDiv.innerHTML = `
+                        <label>${input.name} (${input.type}):
+                            <input type="text" id="param${index}" placeholder="${input.type}"/>
+                        </label>
+                    `;
+                    parameterInputs.appendChild(inputDiv);
+                });
+            }
+        }
+
+        document.getElementById('sendTransactionButton').onclick = async () => {
+            const selectedContract = document.getElementById('contractSelect').value;
+            const selectedFunction = document.getElementById('functionSelect').value;
+            
+            const accounts = await web3.eth.getAccounts();
+            const fromAddress = accounts[0];
+
+            const contract = new web3.eth.Contract(CONTRACT_ABIS[selectedContract], selectedContract);
+            const functionAbi = CONTRACT_ABIS[selectedContract].find(item => item.type === 'function' && item.name === selectedFunction);
+
+            // Collect parameters
+            const params = [];
+            if (functionAbi.inputs) {
+                for (let i = 0; i < functionAbi.inputs.length; i++) {
+                    const value = document.getElementById(`param${i}`).value;
+                    params.push(value);
+                }
+            }
+
+            try {
+                let result;
+                if (functionAbi.stateMutability === 'view') {
+                    result = await contract.methods[selectedFunction](...params).call();
+                    console.log('Function result:', result);
+                    alert(`Result: ${result}`);
+                } else {
+                    result = await contract.methods[selectedFunction](...params).send({ from: fromAddress });
+                    console.log('Transaction successful:', result);
+                    alert('Transaction successful!');
+                }
+            } catch (error) {
+                console.error('Transaction failed:', error);
+                alert(`Transaction failed: ${error.message}`);
+            }
+        };
+    </script>
+</body>
+</html>
