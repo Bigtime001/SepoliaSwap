@@ -95,13 +95,40 @@
             if (functionAbi && functionAbi.inputs) {
                 functionAbi.inputs.forEach((input, index) => {
                     const inputDiv = document.createElement('div');
-                    inputDiv.innerHTML = `
-                        <label>${input.name} (${input.type}):
-                            <input type="text" id="param${index}" placeholder="${input.type}"/>
-                        </label>
-                    `;
+                    if (input.name === "amount" || input.type === "uint256") {
+                        // Add ETH input with conversion for amount parameters
+                        inputDiv.innerHTML = `
+                            <label>${input.name} (${input.type}):
+                                <input type="number" step="0.000000000000000001" id="param${index}_eth" 
+                                    placeholder="Enter ETH amount" 
+                                    onchange="updateWeiValue(${index})"/>
+                                <input type="text" id="param${index}" placeholder="Wei value" readonly/>
+                            </label>
+                        `;
+                    } else {
+                        inputDiv.innerHTML = `
+                            <label>${input.name} (${input.type}):
+                                <input type="text" id="param${index}" placeholder="${input.type}"/>
+                            </label>
+                        `;
+                    }
                     parameterInputs.appendChild(inputDiv);
                 });
+            }
+        }
+
+        function updateWeiValue(index) {
+            const ethInput = document.getElementById(`param${index}_eth`);
+            const weiInput = document.getElementById(`param${index}`);
+            const ethValue = ethInput.value;
+            
+            try {
+                const weiValue = web3.utils.toWei(ethValue, 'ether');
+                weiInput.value = weiValue;
+            } catch (error) {
+                alert('Please enter a valid ETH amount');
+                ethInput.value = '';
+                weiInput.value = '';
             }
         }
 
