@@ -3,44 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect Wallet and Send Transaction</title>
+    <title>DeFi Interface</title>
     <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
 </head>
 <body>
-    <h1>Connect Wallet and Send Transaction</h1>
+    <h1>DeFi Interface</h1>
     <button id="connectButton">Connect Wallet</button>
 
-    <div id="contractSelection" style="display:none;">
-        <h2>Select Contract</h2>
-        <select id="contractSelect" onchange="updateFunctionOptions()">
-            <option value="0x5B4D751C5520417A69A45116dE290972Ef0F2aaA">AMM Contract</option>
-            <option value="0xa0fea47c50d937311a6594f4f2bae413300c1913">Twitter Contract</option>
-            <option value="0x156cbcb31e8234a2a159909049aeb5f4156ddd61">Trading Contract</option>
-            <option value="0x49c30BE60EcCB71a905c3E02fb63F34ceBfda924">Voting Contract</option>
-            <option value="0xaAb3936e1505F06a8700a8f7B1218D2015B682C8">Counter Contract</option>
-        </select>
-
-        <h2>Select Function</h2>
-        <select id="functionSelect">
-            <!-- Functions will be populated here based on the selected contract -->
-        </select>
-
-        <h2>Function Parameters</h2>
-        <div id="parameterInputs">
-            <!-- Parameter inputs will be dynamically added here -->
+    <div id="contracts">
+        <h2>AMM Contract</h2>
+        <div>
+            <p>Address: 0x5B4D751C5520417A69A45116dE290972Ef0F2aaA</p>
+            <div id="amm-functions"></div>
         </div>
 
-        <button id="sendTransactionButton">Send Transaction</button>
+        <h2>Twitter Contract</h2>
+        <div>
+            <p>Address: 0xa0fea47c50d937311a6594f4f2bae413300c1913</p>
+            <div id="twitter-functions"></div>
+        </div>
+
+        <h2>Trading Contract</h2>
+        <div>
+            <p>Address: 0x156cbcb31e8234a2a159909049aeb5f4156ddd61</p>
+            <div id="trading-functions"></div>
+        </div>
+
+        <h2>Voting Contract</h2>
+        <div>
+            <p>Address: 0x49c30BE60EcCB71a905c3E02fb63F34ceBfda924</p>
+            <div id="voting-functions"></div>
+        </div>
+
+        <h2>Counter Contract</h2>
+        <div>
+            <p>Address: 0xaAb3936e1505F06a8700a8f7B1218D2015B682C8</p>
+            <div id="counter-functions"></div>
+        </div>
+    </div>
+
+    <h2>Tokens</h2>
+    <div id="tokens">
+        <div>
+            <h3>$MAD</h3>
+            <p>0x7b818ea33426b1324cbfbc0450600c0510c99748</p>
+        </div>
+        <div>
+            <h3>$BOOM</h3>
+            <p>0x3a0b07e58b7b63ae10b9b89fd83fc413f6312b64</p>
+        </div>
+        <div>
+            <h3>$ZOO</h3>
+            <p>0x051df65d05e04062dbbd8dfb7f21752e2ca5449a</p>
+        </div>
+        <div>
+            <h3>$PEEL</h3>
+            <p>0x541ad6c548ffe82779bcc35302435f5a0e30a8cc</p>
+        </div>
+        <div>
+            <h3>$JUNK</h3>
+            <p>0x7389ddd79d8b22d1de5384c8fc8fa1ac80ac4532</p>
+        </div>
+        <div>
+            <h3>$MATE</h3>
+            <p>0xa624b34aa8de364328d03e2b0e827ca9c51156e5</p>
+        </div>
     </div>
 
     <script>
-        const alchemyUrl = "https://shape-sepolia.g.alchemy.com/v2/tNVm7AEbbeB64EyJmh3Uz2CMYOPtpcKs";
-        let web3;
-
         const CONTRACT_ABIS = {
-            "0x5B4D751C5520417A69A45116dE290972Ef0F2aaA": [{"inputs":[{"internalType":"address","name":"_tokenA","type":"address"},{"internalType":"address","name":"_tokenB","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"OwnableInvalidOwner","type":"error"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"OwnableUnauthorizedAccount","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"liquidityProvider","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountTokenA","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amountTokenB","type":"uint256"}],"name":"LiquidityAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"liquidityProvider","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountTokenA","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amountTokenB","type":"uint256"}],"name":"LiquidityRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"trader","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountTokenA","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amountTokenB","type":"uint256"}],"name":"SwappedAforB","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"trader","type":"address"},{"indexed":false,"internalType":"uint256","name":"amountTokenB","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"amountTokenA","type":"uint256"}],"name":"SwappedBforA","type":"event"},{"inputs":[{"internalType":"uint256","name":"amountA","type":"uint256"},{"internalType":"uint256","name":"amountB","type":"uint256"}],"name":"addLiquidity","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_token","type":"address"}],"name":"getPrice","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}],
+            "0x5B4D751C5520417A69A45116dE290972Ef0F2aaA": [{"inputs":[{"internalType":"address","name":"_tokenA","type":"address"},{"internalType":"address","name":"_tokenB","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[{"internalType":"uint256","name":"amountA","type":"uint256"},{"internalType":"uint256","name":"amountB","type":"uint256"}],"name":"addLiquidity","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_token","type":"address"}],"name":"getPrice","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}],
             
-            "0xa0fea47c50d937311a6594f4f2bae413300c1913": [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"id","type":"uint256"},{"indexed":false,"internalType":"address","name":"author","type":"address"},{"indexed":false,"internalType":"string","name":"content","type":"string"},{"indexed":false,"internalType":"uint256","name":"timestamp","type":"uint256"}],"name":"TweetCreated","type":"event"},{"inputs":[{"internalType":"string","name":"_tweet","type":"string"}],"name":"createTweet","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_owner","type":"address"}],"name":"getAllTweets","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likes","type":"uint256"}],"internalType":"struct Twitter.Tweet[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "0xa0fea47c50d937311a6594f4f2bae413300c1913": [{"inputs":[{"internalType":"string","name":"_tweet","type":"string"}],"name":"createTweet","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_owner","type":"address"}],"name":"getAllTweets","outputs":[{"components":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"address","name":"author","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"},{"internalType":"uint256","name":"likes","type":"uint256"}],"internalType":"struct Twitter.Tweet[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
             
             "0x156cbcb31e8234a2a159909049aeb5f4156ddd61": [{"inputs":[],"name":"getBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCollectedFees","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"}],
             
@@ -49,124 +83,90 @@
             "0xaAb3936e1505F06a8700a8f7B1218D2015B682C8": [{"inputs":[],"name":"getCurrent","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"increment","outputs":[],"stateMutability":"nonpayable","type":"function"}]
         };
 
+        let web3;
+
         document.getElementById('connectButton').onclick = async () => {
             if (window.ethereum) {
-                web3 = new Web3(window.ethereum);
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                document.getElementById('contractSelection').style.display = 'block';
-                updateFunctionOptions();
+                try {
+                    web3 = new Web3(window.ethereum);
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    document.getElementById('connectButton').textContent = 'Connected';
+                    initializeContracts();
+                } catch (error) {
+                    console.error('Error connecting to MetaMask:', error);
+                    alert('Failed to connect to MetaMask!');
+                }
             } else {
                 alert('Please install MetaMask!');
             }
         };
 
-        function updateFunctionOptions() {
-            const contractAddress = document.getElementById('contractSelect').value;
-            const functionSelect = document.getElementById('functionSelect');
-            const parameterInputs = document.getElementById('parameterInputs');
+        function createFunctionInterface(contractAddress, functionAbi) {
+            const container = document.createElement('div');
             
-            functionSelect.innerHTML = '';
-            parameterInputs.innerHTML = '';
+            const button = document.createElement('button');
+            button.textContent = functionAbi.name;
+            container.appendChild(button);
 
-            const abi = CONTRACT_ABIS[contractAddress];
-            const functions = abi.filter(item => item.type === 'function');
-
-            functions.forEach(func => {
-                const option = document.createElement('option');
-                option.value = func.name;
-                option.textContent = `${func.name} (${func.stateMutability})`;
-                functionSelect.appendChild(option);
-            });
-
-            functionSelect.onchange = updateParameterInputs;
-            updateParameterInputs();
-        }
-
-        function updateParameterInputs() {
-            const contractAddress = document.getElementById('contractSelect').value;
-            const selectedFunction = document.getElementById('functionSelect').value;
-            const parameterInputs = document.getElementById('parameterInputs');
-            
-            parameterInputs.innerHTML = '';
-            
-            const abi = CONTRACT_ABIS[contractAddress];
-            const functionAbi = abi.find(item => item.type === 'function' && item.name === selectedFunction);
-            
-            if (functionAbi && functionAbi.inputs) {
-                functionAbi.inputs.forEach((input, index) => {
-                    const inputDiv = document.createElement('div');
-                    if (input.name === "amount" || input.type === "uint256") {
-                        // Add ETH input with conversion for amount parameters
-                        inputDiv.innerHTML = `
-                            <label>${input.name} (${input.type}):
-                                <input type="number" step="0.000000000000000001" id="param${index}_eth" 
-                                    placeholder="Enter ETH amount" 
-                                    onchange="updateWeiValue(${index})"/>
-                                <input type="text" id="param${index}" placeholder="Wei value" readonly/>
-                            </label>
-                        `;
-                    } else {
-                        inputDiv.innerHTML = `
-                            <label>${input.name} (${input.type}):
-                                <input type="text" id="param${index}" placeholder="${input.type}"/>
-                            </label>
-                        `;
-                    }
-                    parameterInputs.appendChild(inputDiv);
-                });
-            }
-        }
-
-        function updateWeiValue(index) {
-            const ethInput = document.getElementById(`param${index}_eth`);
-            const weiInput = document.getElementById(`param${index}`);
-            const ethValue = ethInput.value;
-            
-            try {
-                const weiValue = web3.utils.toWei(ethValue, 'ether');
-                weiInput.value = weiValue;
-            } catch (error) {
-                alert('Please enter a valid ETH amount');
-                ethInput.value = '';
-                weiInput.value = '';
-            }
-        }
-
-        document.getElementById('sendTransactionButton').onclick = async () => {
-            const selectedContract = document.getElementById('contractSelect').value;
-            const selectedFunction = document.getElementById('functionSelect').value;
-            
-            const accounts = await web3.eth.getAccounts();
-            const fromAddress = accounts[0];
-
-            const contract = new web3.eth.Contract(CONTRACT_ABIS[selectedContract], selectedContract);
-            const functionAbi = CONTRACT_ABIS[selectedContract].find(item => item.type === 'function' && item.name === selectedFunction);
-
-            // Collect parameters
-            const params = [];
             if (functionAbi.inputs) {
-                for (let i = 0; i < functionAbi.inputs.length; i++) {
-                    const value = document.getElementById(`param${i}`).value;
-                    params.push(value);
-                }
+                const inputsDiv = document.createElement('div');
+                functionAbi.inputs.forEach((input, index) => {
+                    const inputElement = document.createElement('input');
+                    inputElement.placeholder = `${input.name} (${input.type})`;
+                    inputElement.id = `${functionAbi.name}_${index}`;
+                    inputsDiv.appendChild(inputElement);
+                });
+                container.appendChild(inputsDiv);
             }
 
-            try {
-                let result;
-                if (functionAbi.stateMutability === 'view') {
-                    result = await contract.methods[selectedFunction](...params).call();
-                    console.log('Function result:', result);
-                    alert(`Result: ${result}`);
-                } else {
-                    result = await contract.methods[selectedFunction](...params).send({ from: fromAddress });
-                    console.log('Transaction successful:', result);
-                    alert('Transaction successful!');
+            const resultDiv = document.createElement('div');
+            container.appendChild(resultDiv);
+
+            button.onclick = async () => {
+                try {
+                    const contract = new web3.eth.Contract(CONTRACT_ABIS[contractAddress], contractAddress);
+                    const accounts = await web3.eth.getAccounts();
+                    const params = [];
+
+                    if (functionAbi.inputs) {
+                        functionAbi.inputs.forEach((_, index) => {
+                            params.push(document.getElementById(`${functionAbi.name}_${index}`).value);
+                        });
+                    }
+
+                    let result;
+                    if (functionAbi.stateMutability === 'view') {
+                        result = await contract.methods[functionAbi.name](...params).call();
+                        resultDiv.textContent = `Result: ${result}`;
+                    } else {
+                        result = await contract.methods[functionAbi.name](...params).send({ from: accounts[0] });
+                        resultDiv.textContent = 'Transaction sent!';
+                    }
+                } catch (error) {
+                    resultDiv.textContent = `Error: ${error.message}`;
                 }
-            } catch (error) {
-                console.error('Transaction failed:', error);
-                alert(`Transaction failed: ${error.message}`);
-            }
-        };
+            };
+
+            return container;
+        }
+
+        function initializeContracts() {
+            Object.entries(CONTRACT_ABIS).forEach(([address, abi]) => {
+                const functions = abi.filter(item => item.type === 'function');
+                const contractId = {
+                    "0x5B4D751C5520417A69A45116dE290972Ef0F2aaA": "amm",
+                    "0xa0fea47c50d937311a6594f4f2bae413300c1913": "twitter",
+                    "0x156cbcb31e8234a2a159909049aeb5f4156ddd61": "trading",
+                    "0x49c30BE60EcCB71a905c3E02fb63F34ceBfda924": "voting",
+                    "0xaAb3936e1505F06a8700a8f7B1218D2015B682C8": "counter"
+                }[address];
+
+                const functionContainer = document.getElementById(`${contractId}-functions`);
+                functions.forEach(func => {
+                    functionContainer.appendChild(createFunctionInterface(address, func));
+                });
+            });
+        }
     </script>
 </body>
 </html>
